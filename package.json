@@ -1,0 +1,20 @@
+{
+  "name": "simple-web-browser",
+  "version": "1.0.0",
+  "description": "Web Browser đơn giản - Bài tập Mạng Máy Tính",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "keywords": [
+    "browser",
+    "electron",
+    "networking"
+  ],
+  "author": "Student",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.0.2"
+  }
+}
