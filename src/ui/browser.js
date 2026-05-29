@@ -28,13 +28,14 @@ class Browser {
         }
     }
     
-    addToSearchHistory(url) {
+    addToSearchHistory(url, query = null) {
         // Xóa nếu đã tồn tại
         this.searchHistory = this.searchHistory.filter(item => item.url !== url);
         
         // Thêm vào đầu
         this.searchHistory.unshift({
             url: url,
+            query: query || url, // Lưu từ khóa tìm kiếm gốc
             timestamp: Date.now()
         });
         
@@ -101,7 +102,7 @@ class Browser {
         });
         
         this.webview.addEventListener('page-title-updated', (event) => {
-            document.title = event.title + ' - Simple Web Browser';
+            document.title = event.title + ' - BCH Browser';
         });
         
         this.webview.addEventListener('new-window', (event) => {
@@ -187,7 +188,10 @@ class Browser {
         // Filter theo input nếu có
         const searchTerm = homeSearch ? homeSearch.value.toLowerCase() : '';
         const filteredHistory = searchTerm 
-            ? recentHistory.filter(item => item.url.toLowerCase().includes(searchTerm))
+            ? recentHistory.filter(item => {
+                const query = item.query || item.url;
+                return query.toLowerCase().includes(searchTerm);
+            })
             : recentHistory;
         
         if (filteredHistory.length === 0) {
@@ -195,14 +199,15 @@ class Browser {
         } else {
             historyList.innerHTML = filteredHistory.map(item => {
                 const timeAgo = this.getTimeAgo(item.timestamp);
+                const displayText = item.query || item.url; // Hiển thị từ khóa thay vì URL
                 return `
-                    <div class="history-item" data-url="${this.escapeHtml(item.url)}">
+                    <div class="history-item" data-url="${this.escapeHtml(item.url)}" data-query="${this.escapeHtml(displayText)}">
                         <svg class="history-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"/>
                             <polyline points="12 6 12 12 16 14"/>
                         </svg>
                         <div class="history-text">
-                            <div class="history-url">${this.escapeHtml(item.url)}</div>
+                            <div class="history-url">${this.escapeHtml(displayText)}</div>
                             <div class="history-time">${timeAgo}</div>
                         </div>
                         <button class="history-delete" data-url="${this.escapeHtml(item.url)}" title="Xóa">
@@ -219,8 +224,8 @@ class Browser {
             historyList.querySelectorAll('.history-item').forEach(item => {
                 item.addEventListener('click', (e) => {
                     if (!e.target.closest('.history-delete')) {
-                        const url = item.getAttribute('data-url');
-                        if (homeSearch) homeSearch.value = url;
+                        const query = item.getAttribute('data-query');
+                        if (homeSearch) homeSearch.value = query;
                         this.navigateFromHome();
                     }
                 });
@@ -281,7 +286,7 @@ class Browser {
         }
         
         let url = this.processInput(input);
-        this.loadPage(url);
+        this.loadPage(url, input); // Truyền input gốc làm query
     }
     
     processInput(input) {
@@ -305,13 +310,13 @@ class Browser {
         return `https://www.google.com/search?q=${searchQuery}`;
     }
     
-    loadPage(url) {
+    loadPage(url, query = null) {
         // Ẩn welcome screen, hiện webview
         this.welcomeScreen.style.display = 'none';
         this.webview.style.display = 'inline-flex';
         
-        // Lưu vào lịch sử
-        this.addToSearchHistory(url);
+        // Lưu vào lịch sử với từ khóa gốc
+        this.addToSearchHistory(url, query);
         
         // Load URL
         this.webview.loadURL(url);
